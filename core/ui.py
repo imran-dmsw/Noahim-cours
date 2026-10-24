@@ -7,18 +7,20 @@ from datetime import date
 
 import streamlit as st
 
-BG = "#f5f8fc"
-SURFACE = "#ffffff"
-BORDER = "#e3eaf2"
+BG = "#0d1b2a"
+SURFACE = "#13263a"
+BORDER = "#22395a"
 ACCENT = "#1a82d4"
 ACCENT_DARK = "#0f5fa8"
-MINT = "#1fbf7a"        # barres et graphiques
-MINT_TEXT = "#0f8a56"   # texte vert lisible sur fond clair
+ACCENT_TEXT = "#6cb8f5"  # bleu lisible sur fond sombre
+MINT = "#3ddc97"        # barres et graphiques
+MINT_TEXT = "#3ddc97"
 ORANGE = "#ff9f43"
-ORANGE_TEXT = "#b95f0b"
-TEXT = "#0f1f33"
-MUTED = "#5b6b80"
-TRACK = "#edf2f8"       # fond des barres de progression
+ORANGE_TEXT = "#ffb36b"
+TEXT = "#e8f1f8"
+MUTED = "#8aa4bd"
+TRACK = "#1c3148"       # fond des barres de progression
+TODO = "#3b556e"        # chapitres « à voir » dans les graphiques
 
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
@@ -49,14 +51,14 @@ QUOTES = [
 
 
 def inject_css() -> None:
-    """Thème clair : police Inter (via .streamlit/config.toml), cartes, badges, mobile."""
+    """Thème sombre : police Inter (via .streamlit/config.toml), cartes, badges, mobile."""
     st.markdown(
         f"""
 <style>
 h1, h2, h3, h4 {{ letter-spacing: -0.02em; color: {TEXT}; overflow-wrap: normal; word-break: normal; }}
 h2 {{ font-size: clamp(1.25rem, 2.2vw, 1.55rem) !important; }}
 h3 {{ font-size: clamp(1.05rem, 1.8vw, 1.2rem) !important; }}
-.stApp {{ background: {BG}; }}
+.stApp {{ background: radial-gradient(1100px 520px at 100% -10%, rgba(26,130,212,.16), transparent 60%), {BG}; }}
 .block-container {{ padding-top: 2rem; max-width: 1180px; }}
 
 /* En-tête de page */
@@ -66,7 +68,7 @@ h3 {{ font-size: clamp(1.05rem, 1.8vw, 1.2rem) !important; }}
 /* Bannière d'accueil */
 .nr-hero {{ position: relative; overflow: hidden; border-radius: 22px; padding: 1.8rem 1.9rem 1.6rem;
   color: #fff; background: linear-gradient(135deg, {ACCENT} 0%, {ACCENT_DARK} 100%);
-  box-shadow: 0 12px 32px rgba(26,130,212,.25); }}
+  box-shadow: 0 14px 36px rgba(26,130,212,.28); }}
 .nr-hero::after {{ content: ""; position: absolute; right: -60px; top: -80px; width: 260px; height: 260px;
   border-radius: 50%; background: rgba(255,255,255,.10); }}
 .nr-hero::before {{ content: ""; position: absolute; right: 90px; bottom: -110px; width: 200px; height: 200px;
@@ -79,7 +81,7 @@ h3 {{ font-size: clamp(1.05rem, 1.8vw, 1.2rem) !important; }}
 
 /* Cartes */
 .nr-card {{ background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 16px; padding: 1rem 1.15rem;
-  margin-bottom: .8rem; box-shadow: 0 1px 2px rgba(15,31,51,.04), 0 6px 18px rgba(15,31,51,.04); }}
+  margin-bottom: .8rem; box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.18); }}
 .nr-card h3, .nr-card h4 {{ margin: 0 0 .4rem 0; padding: 0; }}
 .nr-metric-label {{ color: {MUTED}; font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }}
 .nr-metric-value {{ font-weight: 800; font-size: clamp(1.4rem, 2.4vw, 1.9rem); color: {TEXT};
@@ -97,22 +99,22 @@ h3 {{ font-size: clamp(1.05rem, 1.8vw, 1.2rem) !important; }}
 /* Badges */
 .nr-badge {{ display: inline-block; padding: .18rem .6rem; border-radius: 99px; font-size: .76rem;
   font-weight: 600; margin: 0 .3rem .2rem 0; background: {TRACK}; color: {TEXT}; }}
-.nr-badge.mint {{ background: rgba(31,191,122,.12); color: {MINT_TEXT}; }}
+.nr-badge.mint {{ background: rgba(61,220,151,.14); color: {MINT_TEXT}; }}
 .nr-badge.orange {{ background: rgba(255,159,67,.15); color: {ORANGE_TEXT}; }}
-.nr-badge.blue {{ background: rgba(26,130,212,.10); color: {ACCENT_DARK}; }}
+.nr-badge.blue {{ background: rgba(26,130,212,.18); color: {ACCENT_TEXT}; }}
 .nr-muted {{ color: {MUTED}; }}
 
 /* Planning */
 .nr-day {{ font-weight: 700; font-size: .9rem; margin-bottom: .35rem; color: {TEXT}; }}
-.nr-day.today {{ color: {ACCENT}; }}
+.nr-day.today {{ color: {MINT_TEXT}; }}
 .nr-chip {{ background: {SURFACE}; border: 1px solid {BORDER}; border-left: 3px solid {ACCENT}; border-radius: 8px;
   padding: .35rem .5rem; margin-bottom: .35rem; font-size: .8rem; line-height: 1.25; overflow-wrap: anywhere; }}
 .nr-chip.done {{ opacity: .5; text-decoration: line-through; }}
-.nr-chip.exam {{ border-left-color: {ORANGE}; color: {ORANGE_TEXT}; font-weight: 600; background: rgba(255,159,67,.08); }}
+.nr-chip.exam {{ border-left-color: {ORANGE}; color: {ORANGE_TEXT}; font-weight: 600; background: rgba(255,159,67,.10); }}
 
 /* Questions flash */
 details.nr-flash {{ background: {BG}; border: 1px solid {BORDER}; border-radius: 12px; padding: .5rem .8rem; margin: .3rem 0 .8rem; }}
-details.nr-flash summary {{ cursor: pointer; color: {ACCENT}; font-weight: 600; }}
+details.nr-flash summary {{ cursor: pointer; color: {ACCENT_TEXT}; font-weight: 600; }}
 
 /* Boutons et blocs Streamlit */
 div.stButton > button, div.stDownloadButton > button, div[data-testid="stFormSubmitButton"] > button {{ font-weight: 600; }}

@@ -51,7 +51,7 @@ with left:
         df["Statut"] = df["status"].map(db.STATUS_LABELS)
         counts = df.groupby(["subject_name", "Statut"]).size().reset_index(name="n")
         fig2 = go.Figure()
-        for statut, color in [("Maîtrisé", ui.MINT), ("En cours", ui.ORANGE), ("À voir", "#c9d6e3")]:
+        for statut, color in [("Maîtrisé", ui.MINT), ("En cours", ui.ORANGE), ("À voir", ui.TODO)]:
             part = counts[counts["Statut"] == statut]
             fig2.add_bar(y=part["subject_name"], x=part["n"], name=statut, orientation="h", marker_color=color)
         fig2.update_layout(**PLOT_LAYOUT, barmode="stack", height=60 + 50 * len(progress))

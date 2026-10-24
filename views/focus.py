@@ -30,7 +30,7 @@ with left:
     components.html(
         f"""
 <div id="t" style="font-family:Inter,system-ui,sans-serif;color:{ui.TEXT};text-align:center;
-  background:{ui.SURFACE};border-radius:20px;padding:22px 12px;border:1px solid {ui.BORDER};box-shadow:0 6px 18px rgba(15,31,51,.05)">
+  background:{ui.SURFACE};border-radius:20px;padding:22px 12px;border:1px solid {ui.BORDER};box-shadow:0 8px 24px rgba(0,0,0,.2)">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap" rel="stylesheet">
   <div id="mode" style="font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:{ui.MINT_TEXT}">Focus</div>
   <div id="clock" style="font-family:Inter,sans-serif;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;font-size:clamp(44px,17vw,72px);line-height:1.1;margin:6px 0">{work:02d}:00</div>
