@@ -30,15 +30,15 @@ with left:
     components.html(
         f"""
 <div id="t" style="font-family:Inter,system-ui,sans-serif;color:{ui.TEXT};text-align:center;
-  background:{ui.SURFACE};border-radius:20px;padding:22px 12px;border:1px solid rgba(255,255,255,.06)">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
-  <div id="mode" style="font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:{ui.MINT}">Focus</div>
-  <div id="clock" style="font-family:Syne,sans-serif;font-weight:800;font-size:clamp(44px,17vw,72px);line-height:1.1;margin:6px 0">{work:02d}:00</div>
-  <div style="height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:0 10% 16px">
+  background:{ui.SURFACE};border-radius:20px;padding:22px 12px;border:1px solid {ui.BORDER};box-shadow:0 6px 18px rgba(15,31,51,.05)">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap" rel="stylesheet">
+  <div id="mode" style="font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:{ui.MINT_TEXT}">Focus</div>
+  <div id="clock" style="font-family:Inter,sans-serif;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;font-size:clamp(44px,17vw,72px);line-height:1.1;margin:6px 0">{work:02d}:00</div>
+  <div style="height:8px;background:{ui.TRACK};border-radius:99px;overflow:hidden;margin:0 10% 16px">
     <div id="bar" style="height:100%;width:0;background:linear-gradient(90deg,{ui.ACCENT},{ui.MINT})"></div></div>
   <button id="go" style="background:{ui.ACCENT};color:white;border:0;border-radius:12px;padding:10px 22px;font-weight:600;font-size:15px;cursor:pointer">▶ Démarrer</button>
-  <button id="reset" style="background:transparent;color:{ui.TEXT};border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 18px;font-weight:600;font-size:15px;cursor:pointer;margin-left:6px">↺</button>
-  <div id="msg" style="margin-top:12px;font-size:13px;color:#8aa4bd">Quand le focus se termine, valide la séance juste en dessous.</div>
+  <button id="reset" style="background:transparent;color:{ui.TEXT};border:1px solid {ui.BORDER};border-radius:12px;padding:10px 18px;font-weight:600;font-size:15px;cursor:pointer;margin-left:6px">↺</button>
+  <div id="msg" style="margin-top:12px;font-size:13px;color:{ui.MUTED}">Quand le focus se termine, valide la séance juste en dessous.</div>
 </div>
 <script>
 const WORK={work}*60, PAUSE={pause}*60;
@@ -50,7 +50,7 @@ function draw(){{
   const total=mode==='work'?WORK:PAUSE;
   $('bar').style.width=(100*(total-left)/total)+'%';
   $('mode').textContent=mode==='work'?'Focus':'Pause';
-  $('mode').style.color=mode==='work'?'{ui.MINT}':'{ui.ORANGE}';
+  $('mode').style.color=mode==='work'?'{ui.MINT_TEXT}':'{ui.ORANGE_TEXT}';
 }}
 function beep(){{ try{{ const c=new (window.AudioContext||window.webkitAudioContext)();
   [0,0.35,0.7].forEach(t=>{{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
@@ -120,7 +120,7 @@ else:
     fig.update_traces(marker_color=ui.ACCENT)
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=240,
                       font=dict(family="Inter, sans-serif", color=ui.TEXT), margin=dict(l=10, r=10, t=10, b=10),
-                      yaxis=dict(gridcolor="rgba(255,255,255,.06)"))
+                      yaxis=dict(gridcolor=ui.TRACK))
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
     table = pd.DataFrame({
         "Quand": df["started_at"].dt.strftime("%d/%m %H:%M"),

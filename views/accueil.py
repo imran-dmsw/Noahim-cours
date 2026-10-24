@@ -7,7 +7,6 @@ from core import db, stats, ui
 
 today = date.today()
 ui.hero("Salut Noahim 👋", f"On est {ui.french_date(today)}.", ui.quote_of_the_day(today))
-st.write("")
 
 progress = stats.subject_progress()
 global_pct = stats.global_progress(progress)
@@ -17,20 +16,18 @@ upcoming = db.list_exams(upcoming_only=True, today=today)
 next_exam = upcoming[0] if upcoming else None
 
 # --- Les 4 chiffres clés ----------------------------------------------------
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    ui.metric_card("Progression globale", f"{global_pct:.0f} %", "tous chapitres confondus")
-with c2:
-    ui.metric_card("Série", f"🔥 {serie} j", "jours de travail d'affilée" if serie else "lance-toi aujourd'hui")
-with c3:
-    if next_exam:
-        days_left = (date.fromisoformat(next_exam["exam_date"]) - today).days
-        label = "C'est aujourd'hui !" if days_left == 0 else f"J-{days_left}"
-        ui.metric_card("Prochain examen", label, f"{next_exam['subject_emoji']} {next_exam['title']}")
-    else:
-        ui.metric_card("Prochain examen", "—", "ajoute-le dans Examens")
-with c4:
-    ui.metric_card("Niveau", f"{lvl['level']}", f"{lvl['title']} · {lvl['xp']} XP")
+if next_exam:
+    days_left = (date.fromisoformat(next_exam["exam_date"]) - today).days
+    exam_value = "Aujourd'hui !" if days_left == 0 else f"J-{days_left}"
+    exam_sub = f"{next_exam['subject_emoji']} {next_exam['title']}"
+else:
+    exam_value, exam_sub = "—", "ajoute-le dans Examens"
+ui.metric_grid([
+    ("Progression", f"{global_pct:.0f} %", "tous chapitres confondus", ui.ACCENT),
+    ("Série", f"🔥 {serie} j", "jours d'affilée" if serie else "lance-toi aujourd'hui", ui.ORANGE),
+    ("Prochain examen", exam_value, exam_sub, "#8b5cf6"),
+    ("Niveau", f"{lvl['level']}", f"{lvl['title']} · {lvl['xp']} XP", ui.MINT),
+])
 
 left, right = st.columns([3, 2], gap="large")
 

@@ -111,7 +111,7 @@ else:
         if n1.button("◀", width="stretch", help="7 jours plus tôt"):
             st.session_state["week_offset"] -= 1
             st.rerun()
-        n2.markdown(f"<div style='text-align:center;padding-top:.4rem' class='nr-title'>"
+        n2.markdown(f"<div style='text-align:center;padding-top:.45rem;font-weight:700'>"
                     f"Du {ui.french_date(first_day, False)} au {ui.french_date(last_day, False)}</div>",
                     unsafe_allow_html=True)
         if n3.button("▶", width="stretch", help="7 jours plus tard"):

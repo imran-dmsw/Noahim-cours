@@ -7,13 +7,18 @@ from datetime import date
 
 import streamlit as st
 
-BG = "#0d1b2a"
-SURFACE = "#13263a"
+BG = "#f5f8fc"
+SURFACE = "#ffffff"
+BORDER = "#e3eaf2"
 ACCENT = "#1a82d4"
-MINT = "#3ddc97"
+ACCENT_DARK = "#0f5fa8"
+MINT = "#1fbf7a"        # barres et graphiques
+MINT_TEXT = "#0f8a56"   # texte vert lisible sur fond clair
 ORANGE = "#ff9f43"
-TEXT = "#e8f1f8"
-MUTED = "#8aa4bd"
+ORANGE_TEXT = "#b95f0b"
+TEXT = "#0f1f33"
+MUTED = "#5b6b80"
+TRACK = "#edf2f8"       # fond des barres de progression
 
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
@@ -44,70 +49,80 @@ QUOTES = [
 
 
 def inject_css() -> None:
-    """Polices Google (Syne + Inter), cartes, badges et ajustements mobile."""
+    """Thème clair : police Inter (via .streamlit/config.toml), cartes, badges, mobile."""
     st.markdown(
         f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
-html, body, .stApp, p, li, label, input, textarea, button, td, th,
-[data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"] {{
-  font-family: 'Inter', system-ui, sans-serif;
-}}
-h1, h2, h3, h4, .nr-title {{
-  font-family: 'Syne', 'Inter', sans-serif !important;
-  font-weight: 800 !important; letter-spacing: -0.01em;
-}}
-h2 {{ font-size: clamp(1.3rem, 2.4vw, 1.7rem) !important; }}
-h3 {{ font-size: clamp(1.1rem, 2vw, 1.35rem) !important; }}
-h1, h2, h3, h4 {{ overflow-wrap: normal; word-break: normal; hyphens: none; }}
-.stApp {{ background: radial-gradient(1200px 600px at 100% -10%, rgba(26,130,212,.18), transparent 60%), {BG}; }}
-[data-testid="stSidebar"] {{ background: #0a1622; border-right: 1px solid rgba(255,255,255,.05); }}
-.block-container {{ padding-top: 2.2rem; max-width: 1200px; }}
+h1, h2, h3, h4 {{ letter-spacing: -0.02em; color: {TEXT}; overflow-wrap: normal; word-break: normal; }}
+h2 {{ font-size: clamp(1.25rem, 2.2vw, 1.55rem) !important; }}
+h3 {{ font-size: clamp(1.05rem, 1.8vw, 1.2rem) !important; }}
+.stApp {{ background: {BG}; }}
+.block-container {{ padding-top: 2rem; max-width: 1180px; }}
 
-.nr-hero h1 {{ font-size: clamp(1.8rem, 4vw, 2.6rem) !important; margin: 0 0 .2rem 0; line-height: 1.1; padding: 0; }}
-.nr-hero p {{ color: {MUTED}; font-size: 1.05rem; margin: 0; }}
-.nr-quote {{ margin-top: .9rem; padding: .8rem 1rem; border-left: 3px solid {ACCENT};
-  background: rgba(26,130,212,.08); border-radius: 0 12px 12px 0; color: {TEXT}; font-style: italic; }}
+/* En-tête de page */
+.nr-head h1 {{ font-size: clamp(1.6rem, 3.2vw, 2.1rem) !important; margin: 0; padding: 0; line-height: 1.15; }}
+.nr-head p {{ color: {MUTED}; font-size: 1rem; margin: .25rem 0 0; }}
 
-.nr-card {{ background: {SURFACE}; border: 1px solid rgba(255,255,255,.06); border-radius: 18px;
-  padding: 1rem 1.2rem; margin-bottom: .8rem; }}
-.nr-card h3, .nr-card h4 {{ margin: 0 0 .4rem 0; }}
-.nr-metric-label {{ color: {MUTED}; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }}
-.nr-metric-value {{ font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(1.3rem, 2.4vw, 2rem);
-  color: {TEXT}; line-height: 1.2; white-space: nowrap; }}
-.nr-pct {{ font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem; white-space: nowrap; margin-left: .5rem; }}
+/* Bannière d'accueil */
+.nr-hero {{ position: relative; overflow: hidden; border-radius: 22px; padding: 1.8rem 1.9rem 1.6rem;
+  color: #fff; background: linear-gradient(135deg, {ACCENT} 0%, {ACCENT_DARK} 100%);
+  box-shadow: 0 12px 32px rgba(26,130,212,.25); }}
+.nr-hero::after {{ content: ""; position: absolute; right: -60px; top: -80px; width: 260px; height: 260px;
+  border-radius: 50%; background: rgba(255,255,255,.10); }}
+.nr-hero::before {{ content: ""; position: absolute; right: 90px; bottom: -110px; width: 200px; height: 200px;
+  border-radius: 50%; background: rgba(31,191,122,.25); }}
+.nr-hero h1 {{ color: #fff !important; font-size: clamp(1.8rem, 4vw, 2.5rem) !important; margin: 0; padding: 0;
+  line-height: 1.1; position: relative; z-index: 1; }}
+.nr-hero p {{ color: rgba(255,255,255,.85); font-size: 1.02rem; margin: .3rem 0 0; position: relative; z-index: 1; }}
+.nr-quote {{ display: inline-block; margin-top: 1rem; padding: .55rem .9rem; border-radius: 12px; position: relative; z-index: 1;
+  background: rgba(255,255,255,.16); color: #fff; font-weight: 500; backdrop-filter: blur(4px); }}
+
+/* Cartes */
+.nr-card {{ background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 16px; padding: 1rem 1.15rem;
+  margin-bottom: .8rem; box-shadow: 0 1px 2px rgba(15,31,51,.04), 0 6px 18px rgba(15,31,51,.04); }}
+.nr-card h3, .nr-card h4 {{ margin: 0 0 .4rem 0; padding: 0; }}
+.nr-metric-label {{ color: {MUTED}; font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }}
+.nr-metric-value {{ font-weight: 800; font-size: clamp(1.4rem, 2.4vw, 1.9rem); color: {TEXT};
+  line-height: 1.2; white-space: nowrap; letter-spacing: -0.02em; margin: .15rem 0; }}
 .nr-metric-sub {{ color: {MUTED}; font-size: .85rem; }}
+.nr-pct {{ font-weight: 800; font-size: 1.1rem; white-space: nowrap; margin-left: .5rem; color: {TEXT}; }}
+.nr-accent {{ border-top: 3px solid {ACCENT}; }}
+.nr-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: 1rem 0 1.2rem; }}
+@media (min-width: 1100px) {{ .nr-grid {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }} }}
 
-.nr-bar {{ height: 10px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; margin: .35rem 0 .2rem; }}
+/* Barres de progression */
+.nr-bar {{ height: 9px; background: {TRACK}; border-radius: 99px; overflow: hidden; margin: .45rem 0 .3rem; }}
 .nr-bar > span {{ display: block; height: 100%; border-radius: 99px; }}
 
-.nr-badge {{ display: inline-block; padding: .15rem .6rem; border-radius: 99px; font-size: .78rem;
-  font-weight: 600; margin-right: .3rem; background: rgba(255,255,255,.08); color: {TEXT}; }}
-.nr-badge.mint {{ background: rgba(61,220,151,.15); color: {MINT}; }}
-.nr-badge.orange {{ background: rgba(255,159,67,.15); color: {ORANGE}; }}
-.nr-badge.blue {{ background: rgba(26,130,212,.18); color: #6cb8f5; }}
+/* Badges */
+.nr-badge {{ display: inline-block; padding: .18rem .6rem; border-radius: 99px; font-size: .76rem;
+  font-weight: 600; margin: 0 .3rem .2rem 0; background: {TRACK}; color: {TEXT}; }}
+.nr-badge.mint {{ background: rgba(31,191,122,.12); color: {MINT_TEXT}; }}
+.nr-badge.orange {{ background: rgba(255,159,67,.15); color: {ORANGE_TEXT}; }}
+.nr-badge.blue {{ background: rgba(26,130,212,.10); color: {ACCENT_DARK}; }}
 .nr-muted {{ color: {MUTED}; }}
 
-.nr-day {{ font-family: 'Syne', sans-serif; font-weight: 800; font-size: .95rem; margin-bottom: .3rem; }}
-.nr-day.today {{ color: {MINT}; }}
-
-.nr-chip {{ background: rgba(255,255,255,.05); border-left: 3px solid {ACCENT}; border-radius: 8px;
+/* Planning */
+.nr-day {{ font-weight: 700; font-size: .9rem; margin-bottom: .35rem; color: {TEXT}; }}
+.nr-day.today {{ color: {ACCENT}; }}
+.nr-chip {{ background: {SURFACE}; border: 1px solid {BORDER}; border-left: 3px solid {ACCENT}; border-radius: 8px;
   padding: .35rem .5rem; margin-bottom: .35rem; font-size: .8rem; line-height: 1.25; overflow-wrap: anywhere; }}
-.nr-chip.done {{ opacity: .55; text-decoration: line-through; }}
-.nr-chip.exam {{ border-left-color: {ORANGE}; color: {ORANGE}; font-weight: 600; }}
-details.nr-flash {{ background: rgba(255,255,255,.04); border-radius: 12px; padding: .5rem .8rem; margin: .3rem 0 .8rem; }}
-details.nr-flash summary {{ cursor: pointer; color: #6cb8f5; font-weight: 600; }}
+.nr-chip.done {{ opacity: .5; text-decoration: line-through; }}
+.nr-chip.exam {{ border-left-color: {ORANGE}; color: {ORANGE_TEXT}; font-weight: 600; background: rgba(255,159,67,.08); }}
 
-div.stButton > button, div.stDownloadButton > button, div[data-testid="stFormSubmitButton"] > button {{
-  border-radius: 12px; font-weight: 600;
-}}
-[data-testid="stExpander"] {{ border-radius: 14px; border: 1px solid rgba(255,255,255,.07); background: rgba(19,38,58,.6); }}
+/* Questions flash */
+details.nr-flash {{ background: {BG}; border: 1px solid {BORDER}; border-radius: 12px; padding: .5rem .8rem; margin: .3rem 0 .8rem; }}
+details.nr-flash summary {{ cursor: pointer; color: {ACCENT}; font-weight: 600; }}
 
-/* Mobile : on resserre et on réduit les titres */
+/* Boutons et blocs Streamlit */
+div.stButton > button, div.stDownloadButton > button, div[data-testid="stFormSubmitButton"] > button {{ font-weight: 600; }}
+[data-testid="stExpander"] details {{ background: {SURFACE}; }}
+[data-testid="stVerticalBlockBorderWrapper"] {{ background: {SURFACE}; }}
+
+/* Mobile */
 @media (max-width: 640px) {{
-  .block-container {{ padding: 1.2rem .8rem 3rem; }}
-  .nr-hero h1 {{ font-size: 1.9rem; }}
-  .nr-metric-value {{ font-size: 1.6rem; }}
+  .block-container {{ padding: 1.1rem .8rem 3rem; }}
+  .nr-hero {{ padding: 1.3rem 1.2rem 1.2rem; border-radius: 18px; }}
   .nr-card {{ padding: .85rem .95rem; border-radius: 14px; }}
 }}
 </style>
@@ -130,26 +145,42 @@ def quote_of_the_day(d: date) -> str:
 
 
 def hero(title: str, subtitle: str = "", quote: str = "") -> None:
+    """Bannière bleue de la page d'accueil."""
     block = f'<div class="nr-hero"><h1>{esc(title)}</h1>'
     if subtitle:
         block += f"<p>{esc(subtitle)}</p>"
     if quote:
-        block += f'<div class="nr-quote">« {esc(quote)} »</div>'
+        block += f'<div class="nr-quote">💬 {esc(quote)}</div>'
     st.markdown(block + "</div>", unsafe_allow_html=True)
 
 
 def page_title(title: str, subtitle: str = "") -> None:
-    hero(title, subtitle)
+    """En-tête sobre des autres pages."""
+    block = f'<div class="nr-head"><h1>{esc(title)}</h1>'
+    if subtitle:
+        block += f"<p>{esc(subtitle)}</p>"
+    st.markdown(block + "</div>", unsafe_allow_html=True)
     st.write("")
 
 
-def metric_card(label: str, value: str, sub: str = "") -> None:
+def metric_card(label: str, value: str, sub: str = "", color: str = ACCENT) -> None:
     st.markdown(
-        f'<div class="nr-card"><div class="nr-metric-label">{esc(label)}</div>'
+        f'<div class="nr-card nr-accent" style="border-top-color:{color}"><div class="nr-metric-label">{esc(label)}</div>'
         f'<div class="nr-metric-value">{esc(value)}</div>'
         f'<div class="nr-metric-sub">{esc(sub)}</div></div>',
         unsafe_allow_html=True,
     )
+
+
+def metric_grid(items: list[tuple[str, str, str, str]]) -> None:
+    """Cartes de chiffres clés (label, valeur, sous-titre, couleur) qui passent à la ligne selon la largeur."""
+    cards = "".join(
+        f'<div class="nr-card nr-accent" style="border-top-color:{color};margin:0">'
+        f'<div class="nr-metric-label">{esc(label)}</div><div class="nr-metric-value">{esc(value)}</div>'
+        f'<div class="nr-metric-sub">{esc(sub)}</div></div>'
+        for label, value, sub, color in items
+    )
+    st.markdown(f'<div class="nr-grid">{cards}</div>', unsafe_allow_html=True)
 
 
 def bar_html(pct: float, color: str = ACCENT) -> str:

@@ -23,7 +23,7 @@ PLOT_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     font=dict(family="Inter, sans-serif", color=ui.TEXT),
     margin=dict(l=10, r=10, t=30, b=10), legend=dict(orientation="h", y=-0.2),
-    xaxis=dict(gridcolor="rgba(255,255,255,.06)"), yaxis=dict(gridcolor="rgba(255,255,255,.06)"),
+    xaxis=dict(gridcolor=ui.TRACK), yaxis=dict(gridcolor=ui.TRACK),
 )
 
 left, right = st.columns([3, 2], gap="large")
@@ -51,7 +51,7 @@ with left:
         df["Statut"] = df["status"].map(db.STATUS_LABELS)
         counts = df.groupby(["subject_name", "Statut"]).size().reset_index(name="n")
         fig2 = go.Figure()
-        for statut, color in [("Maîtrisé", ui.MINT), ("En cours", ui.ORANGE), ("À voir", "#3b556e")]:
+        for statut, color in [("Maîtrisé", ui.MINT), ("En cours", ui.ORANGE), ("À voir", "#c9d6e3")]:
             part = counts[counts["Statut"] == statut]
             fig2.add_bar(y=part["subject_name"], x=part["n"], name=statut, orientation="h", marker_color=color)
         fig2.update_layout(**PLOT_LAYOUT, barmode="stack", height=60 + 50 * len(progress))
