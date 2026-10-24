@@ -1,0 +1,22 @@
+# Secrets
+.env
+.streamlit/secrets.toml
+
+# Données personnelles (base + cours importés) : restent sur l'ordinateur
+data/*.db
+data/*.db-*
+data/cours/*
+!data/cours/.gitkeep
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Système
+.DS_Store
+
+# Outils locaux
+.claude/
