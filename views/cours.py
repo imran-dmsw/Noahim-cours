@@ -1,12 +1,18 @@
 """Page 2 — Mes cours : matières, chapitres, statut, confiance, notes et imports."""
+import shutil
+import tempfile
+import zipfile
+from pathlib import Path
+
+import pandas as pd
 import streamlit as st
 
-from core import db, files, stats, ui
+from core import db, files, importer, stats, ui
 
 ui.page_title("Mes cours 📚", "Mets à jour tes chapitres au fil des révisions : c'est ce qui nourrit tout le reste.")
 
 subjects = db.list_subjects()
-tab_labels = [f"{s['emoji']} {s['name']}" for s in subjects] + ["⚙️ Gérer les matières"]
+tab_labels = [f"{s['emoji']} {s['name']}" for s in subjects] + ["📥 Importer un dossier", "⚙️ Gérer les matières"]
 tabs = st.tabs(tab_labels)
 
 CONFIDENCE_HELP = "1 = je suis perdu · 3 = ça va · 5 = je pourrais l'expliquer à quelqu'un"
@@ -51,15 +57,24 @@ def chapter_block(ch: dict) -> None:
         for f in files_list:
             fc1, fc2, fc3 = st.columns([6, 2, 2])
             fc1.markdown(f"📄 {ui.esc(f['filename'])}", unsafe_allow_html=True)
-            with fc2.popover("Aperçu"):
-                text = files.extract_text(f["stored_path"])
-                st.text(text[:3000] + ("…" if len(text) > 3000 else "") if text
-                        else "Pas de texte lisible (PDF scanné ?). Colle le contenu à la main.")
+            # Aperçu à la demande : lire tous les PDF à chaque affichage rendrait la page très lente.
+            key = f"prev_{f['id']}"
+            if fc2.button("Masquer" if st.session_state.get(key) else "Aperçu", key=f"prevb_{f['id']}"):
+                st.session_state[key] = not st.session_state.get(key, False)
+                st.rerun()
             if fc3.button("Supprimer", key=f"delf_{f['id']}"):
                 files.delete_file(f["id"])
                 st.rerun()
+            if st.session_state.get(key):
+                if Path(f["filename"]).suffix.lower().lstrip(".") in files.IMAGE_EXTENSIONS:
+                    st.image(str(db.ROOT_DIR / f["stored_path"]))
+                else:
+                    text = files.extract_text(f["stored_path"])
+                    st.text(text[:3000] + ("…" if len(text) > 3000 else "") if text
+                            else "Pas de texte lisible (PDF scanné ?). Colle le contenu à la main.")
         with st.form(f"upload_{ch['id']}", clear_on_submit=True, border=False):
-            uploads = st.file_uploader("Importer PDF, TXT ou MD", type=sorted(files.ALLOWED_EXTENSIONS),
+            uploads = st.file_uploader("Ajouter des fichiers (PDF, Word, PowerPoint, texte, image)",
+                                       type=sorted(files.ALLOWED_EXTENSIONS),
                                        accept_multiple_files=True, key=f"up_{ch['id']}")
             if st.form_submit_button("📥 Importer") and uploads:
                 for up in uploads:
@@ -86,7 +101,7 @@ def chapter_block(ch: dict) -> None:
                 st.rerun()
 
 
-for subject, tab in zip(subjects, tabs[:-1]):
+for subject, tab in zip(subjects, tabs[:-2]):
     with tab:
         chapters = db.list_chapters(subject["id"])
         p = next(x for x in stats.subject_progress(chapters) if x["id"] == subject["id"])
@@ -106,6 +121,82 @@ for subject, tab in zip(subjects, tabs[:-1]):
                 db.add_chapter(subject["id"], name)
                 stats.refresh_snapshot()
                 ui.flash(f"Chapitre « {name.strip()} » ajouté")
+                st.rerun()
+
+# --- Import d'un dossier de cours -------------------------------------------------
+def _show_plan(root: Path) -> None:
+    """Analyse le dossier et garde le plan en mémoire jusqu'au clic sur « Importer »."""
+    plan = importer.plan_import(root, db.list_subjects(), db.list_chapters())
+    st.session_state["import_plan"] = plan
+
+
+with tabs[-2]:
+    st.markdown(
+        "Importe d'un coup un dossier de cours rangé **un dossier par matière, puis un sous-dossier "
+        "par chapitre** (par exemple celui récupéré depuis It's Learning). Les fichiers sont rattachés "
+        "aux chapitres existants quand le nom correspond ; sinon le chapitre est créé. "
+        "Relancer l'import n'ajoute pas de doublon."
+    )
+    source = st.radio("Source", ["Dossier sur cet ordinateur", "Fichier .zip"], horizontal=True,
+                      label_visibility="collapsed")
+    if source == "Dossier sur cet ordinateur":
+        default = importer.default_folder()
+        folder = st.text_input("Chemin du dossier", str(default) if default else "",
+                               placeholder="/Users/…/Documents/cours Noahim")
+        if st.button("🔍 Analyser le dossier"):
+            path = Path(folder).expanduser()
+            if not path.is_dir():
+                st.error("Dossier introuvable. Vérifie le chemin (sur la version en ligne, utilise un .zip).")
+            else:
+                st.session_state.pop("import_tmp", None)
+                _show_plan(path)
+    else:
+        archive = st.file_uploader("Archive .zip du dossier de cours", type=["zip"])
+        if archive and st.button("🔍 Analyser l'archive"):
+            tmp = Path(tempfile.mkdtemp(prefix="cours-import-"))
+            with zipfile.ZipFile(archive) as z:
+                z.extractall(tmp)  # zipfile neutralise les chemins absolus et les « .. »
+            inner = [p for p in tmp.iterdir() if p.is_dir() and not p.name.startswith("__")]
+            root = inner[0] if len(inner) == 1 else tmp  # zip d'un dossier ou de son contenu
+            st.session_state["import_tmp"] = str(tmp)
+            _show_plan(root)
+
+    plan = st.session_state.get("import_plan")
+    if plan is not None:
+        kinds = [p.kind for p in plan]
+        new_subjects = sorted({p.subject for p in plan if p.new_subject and p.kind != "ignoré"})
+        st.markdown(
+            ui.badge(f"{kinds.count('fichier')} fichiers", "blue")
+            + ui.badge(f"{kinds.count('lien')} liens", "mint")
+            + ui.badge(f"{kinds.count('ignoré')} ignorés", "orange"),
+            unsafe_allow_html=True,
+        )
+        if new_subjects:
+            st.caption("Nouvelles matières : " + ", ".join(new_subjects))
+        st.dataframe(pd.DataFrame(importer.summary(plan)), hide_index=True, width="stretch")
+        ignored = [p for p in plan if p.kind == "ignoré"]
+        if ignored:
+            with st.expander(f"Fichiers ignorés ({len(ignored)})"):
+                for p in ignored:
+                    st.caption(f"{p.source.name} — {p.reason}")
+        if st.button("📥 Importer", type="primary", disabled=not any(k != "ignoré" for k in kinds)):
+            bar = st.progress(0.0, text="Import en cours…")
+            report = importer.apply_import(
+                plan, progress=lambda i, n, name: bar.progress(i / n, text=f"{i}/{n} · {name[:60]}"))
+            bar.empty()
+            if st.session_state.get("import_tmp"):
+                shutil.rmtree(st.session_state.pop("import_tmp"), ignore_errors=True)
+            st.session_state.pop("import_plan", None)
+            stats.refresh_snapshot()
+            stats.record_activity()
+            msg = (f"{report['fichiers']} fichiers et {report['liens']} liens importés · "
+                   f"{report['chapitres créés']} chapitres et {report['matières créées']} matières créés")
+            if report["déjà là"]:
+                msg += f" · {report['déjà là']} déjà présents"
+            ui.flash(msg, "📥")
+            for err in report["erreurs"][:10]:
+                st.error(err)
+            if not report["erreurs"]:
                 st.rerun()
 
 # --- Gestion des matières -----------------------------------------------------

@@ -1,16 +1,25 @@
-"""Stockage local des cours importés (PDF, TXT, MD) dans data/cours/."""
+"""Stockage local des cours importés (PDF, Word, PowerPoint, texte, images) dans data/cours/."""
 from __future__ import annotations
 
+import html
+import logging
+import os
 import re
 import unicodedata
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
 from core import db
 
-COURS_DIR = db.DATA_DIR / "cours"
-ALLOWED_EXTENSIONS = {"pdf", "txt", "md"}
-MAX_UPLOAD_MB = 20
+COURS_DIR = Path(os.getenv("NOAHIM_COURS_DIR", db.DATA_DIR / "cours"))
+TEXT_EXTENSIONS = {"txt", "md"}
+IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+ALLOWED_EXTENSIONS = {"pdf", "docx", "pptx"} | TEXT_EXTENSIONS | IMAGE_EXTENSIONS
+MAX_UPLOAD_MB = 50
+
+# pypdf signale bruyamment les petits défauts des PDF scolaires : on ne garde que les erreurs.
+logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 
 def _safe_name(filename: str) -> str:
@@ -25,7 +34,7 @@ def save_upload(chapter_id: int, filename: str, data: bytes) -> Path:
     """Enregistre le fichier sur le disque et le rattache au chapitre."""
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
-        raise ValueError("Formats acceptés : PDF, TXT ou MD.")
+        raise ValueError("Formats acceptés : PDF, Word, PowerPoint, TXT, MD ou image.")
     if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
         raise ValueError(f"Fichier trop lourd (max {MAX_UPLOAD_MB} Mo).")
     folder = COURS_DIR / f"chapitre-{chapter_id}"
@@ -50,7 +59,8 @@ def extract_text(stored_path: str) -> str:
     path = db.ROOT_DIR / stored_path  # un chemin absolu reste absolu
     if not path.exists():
         return ""
-    if path.suffix.lower() == ".pdf":
+    ext = path.suffix.lower().lstrip(".")
+    if ext == "pdf":
         try:
             from pypdf import PdfReader
 
@@ -58,6 +68,10 @@ def extract_text(stored_path: str) -> str:
             return "\n".join((page.extract_text() or "") for page in reader.pages).strip()
         except Exception:
             return ""
+    if ext in ("docx", "pptx"):
+        return _office_text(path, ext)
+    if ext not in TEXT_EXTENSIONS:
+        return ""  # images, etc. : pas de texte à extraire
     raw = path.read_bytes()
     for encoding in ("utf-8", "latin-1"):
         try:
@@ -65,6 +79,30 @@ def extract_text(stored_path: str) -> str:
         except UnicodeDecodeError:
             continue
     return ""
+
+
+def _office_text(path: Path, ext: str) -> str:
+    """Texte d'un .docx ou .pptx : ce sont des archives zip de XML, pas besoin de librairie."""
+    try:
+        with zipfile.ZipFile(path) as z:
+            if ext == "docx":
+                parts = ["word/document.xml"]
+            else:  # une entrée par diapositive, dans l'ordre
+                parts = sorted(
+                    (n for n in z.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)),
+                    key=lambda n: int(re.search(r"(\d+)\.xml$", n).group(1)),
+                )
+            chunks = []
+            for name in parts:
+                xml = z.read(name).decode("utf-8", "ignore")
+                # Un paragraphe (<w:p>, <a:p>) = une ligne ; on garde le texte des balises <w:t>/<a:t>.
+                for para in re.findall(r"<(?:w|a):p[ >].*?</(?:w|a):p>", xml, flags=re.S):
+                    line = "".join(re.findall(r"<(?:w|a):t[^>]*>([^<]*)</(?:w|a):t>", para))
+                    if line.strip():
+                        chunks.append(html.unescape(line))
+            return "\n".join(chunks).strip()
+    except (zipfile.BadZipFile, KeyError, OSError):
+        return ""
 
 
 def chapter_material(chapter: dict) -> str:

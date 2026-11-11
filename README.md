@@ -50,6 +50,20 @@ Dans **Mes cours** :
 - importe des fichiers **PDF, TXT ou MD** (stockés dans `data/cours/`) ;
 - ajoute, renomme ou supprime des chapitres en bas de chaque matière, et des matières dans l'onglet « Gérer les matières ».
 
+Formats acceptés : PDF, Word (.docx), PowerPoint (.pptx), TXT, MD et images (50 Mo max par fichier).
+
+### Importer tout un dossier de cours
+
+Onglet **📥 Importer un dossier** de « Mes cours » : indique un dossier rangé
+« un dossier par matière, puis un sous-dossier par chapitre » (par exemple
+`~/Documents/cours Noahim`, récupéré depuis It's Learning) ou envoie-le en `.zip`.
+- L'appli montre d'abord un aperçu : matière et chapitre de chaque fichier, ce qui sera créé.
+- Les fichiers vont dans le chapitre existant dont le nom correspond (« Le Second degré » → « Second degré »),
+  sinon un chapitre est créé.
+- Un dossier « … (espace commun) » est traité comme plusieurs matières (Histoire, Géographie, EMC…).
+- Les raccourcis `.webloc` (vidéos, manuels en ligne) sont ajoutés au contenu du chapitre.
+- Relancer l'import n'ajoute pas de doublon. Les vidéos ne sont pas importées.
+
 Plus tu remplis, meilleures sont les fiches et les quiz. Un PDF scanné (image) n'a pas de texte lisible :
 colle le contenu à la main dans ce cas.
 
